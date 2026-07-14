@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FXI Studio — Compose</title>
+<script id="models" type="application/json">__MODELS_JSON__</script>
+<script id="melody" type="application/json">__MELODY_JSON__</script>
+<script id="cfg" type="application/json">__CFG_JSON__</script>
+<script id="clip" type="application/json">__CLIPBOARD_JSON__</script>
+<script id="prefill" type="application/json">__PREFILL_JSON__</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  * { margin: 0; }
+  :root {
+    --bg: #050505; --card: hsl(0,0%,11%); --card2: hsl(0,0%,14%); --input: hsl(0,0%,6%);
+    --border: rgba(255,255,255,0.08); --border-active: rgba(238,205,43,0.45);
+    --text: #FFFFFF; --dim: rgba(235,235,245,0.6); --faint: rgba(235,235,245,0.3);
+    --gold: #eecd2b; --cyan: #3fd2d6; --sodium: #f5a63c;
+  }
+  html { height: 100%; }
+  body {
+    height: 100%; color: var(--text);
+    font-family: "AbletonSansSmall", Inter, system-ui, sans-serif; font-size: 12.5px;
+    -webkit-font-smoothing: antialiased; padding: 14px; display: flex; flex-direction: column; gap: 9px; overflow: hidden;
+    background:
+      radial-gradient(120% 80% at 50% -10%, rgba(238,205,43,0.07), transparent 60%),
+      radial-gradient(90% 60% at 110% 110%, rgba(63,210,214,0.045), transparent 55%),
+      var(--bg);
+  }
+  .brand { display: flex; align-items: center; gap: 8px; }
+  .liblink { margin-left: auto; background: transparent; border: 1px solid var(--border); color: var(--gold);
+    font: inherit; font-size: 10px; font-weight: 600; letter-spacing: .4px; text-transform: uppercase;
+    padding: 4px 9px; border-radius: 7px; cursor: pointer; }
+  .liblink:hover { border-color: var(--border-active); background: rgba(238,205,43,0.07); }
+  .brand .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 12px rgba(238,205,43,0.7), 0 0 2px rgba(238,205,43,1); }
+  .brand h1 { font-size: 13px; font-weight: 600; color: #fff; letter-spacing: .3px; }
+  .brand h1 span { background: linear-gradient(92deg, var(--gold), #f6dd5e); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  /* FXI SOUNDSTAGE header — waveform glyph + gold wordmark (Obsidian Glass). */
+  .ssheader { display: flex; align-items: center; gap: 10px; }
+  .ssglyph { height: 26px; width: auto; flex: none; filter: drop-shadow(0 0 6px rgba(238,205,43,0.30)); }
+  .sswords { display: flex; align-items: baseline; gap: 6px; line-height: 1; }
+  .ss1 { font-size: 15px; font-weight: 800; letter-spacing: .5px; color: var(--gold); }
+  .ss2 { font-size: 15px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase;
+    background: linear-gradient(92deg, var(--gold), #f6dd5e 55%, var(--sodium));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  label.cap { display: block; font-size: 10.5px; color: var(--dim); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .7px; }
+  textarea, select {
+    width: 100%; background: var(--input); color: var(--text);
+    border: 1px solid var(--border); border-radius: 10px; padding: 10px 11px; font: inherit;
+  }
+  textarea { resize: none; min-height: 60px; height: 60px; line-height: 1.4; }
+  textarea:focus { outline: none; border-color: var(--border-active); box-shadow: inset 0 0 0 1px rgba(238,205,43,0.12); }
+  /* Soft nudge under the lyrics field when the lyric is too thin to sing well.
+     Advisory only — never blocks Generate. Hidden unless triggered. */
+  .lyrhint { display: none; margin-top: 6px; font-size: 11px; line-height: 1.4; color: var(--sodium); gap: 6px; }
+  .lyrhint.show { display: flex; align-items: center; }
+  .lyrhint::before { content: "›"; color: var(--sodium); font-weight: 700; }
+
+  .caprow { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .caprow .cap { margin: 0; }
+  .paste { background: transparent; border: 1px solid var(--border); color: var(--gold);
+    font: inherit; font-size: 10px; font-weight: 600; letter-spacing: .4px; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 7px; cursor: pointer; }
+  .paste:hover { border-color: var(--border-active); background: rgba(238,205,43,0.07); }
+  .paste:active { transform: translateY(0.5px); }
+
+  /* Melody card */
+  .melody { border: 1px solid var(--border); border-radius: 12px; padding: 11px; background: var(--card);
+    display: flex; flex-direction: column; gap: 8px; }
+  .melody.empty { border-style: dashed; opacity: .8; }
+  .melody .hd { display: flex; align-items: center; justify-content: space-between; }
+  .melody .hd .meta { font-size: 11px; color: var(--cyan); }
+  .roll { width: 100%; height: 48px; border-radius: 8px; background: var(--input); display: block; }
+  .melody .hint { font-size: 11.5px; color: var(--faint); line-height: 1.4; }
+
+  /* Model cards — the list scrolls internally so the dialog body never does. */
+  .models { display: flex; flex-direction: column; gap: 7px; flex: 1; min-height: 96px; }
+  #modelList { display: flex; flex-direction: column; gap: 7px; overflow-y: auto; min-height: 0; }
+  .mhead { display: flex; align-items: center; justify-content: space-between; }
+  .toggle { font-size: 11px; color: var(--gold); cursor: pointer; user-select: none; }
+  .mcard {
+    display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--card); cursor: pointer;
+  }
+  .mcard.on { border-color: var(--border-active); box-shadow: inset 0 0 20px rgba(255,255,255,0.04); }
+  .mcard.disabled { opacity: .4; cursor: not-allowed; }
+  .mcard .box { width: 16px; height: 16px; border-radius: 5px; border: 1px solid var(--faint); flex: none;
+    display: grid; place-items: center; }
+  .mcard.on .box { background: var(--gold); border-color: var(--gold); }
+  .mcard.on .box::after { content: "✓"; color: #1a1300; font-size: 11px; font-weight: 700; }
+  .mcard .minfo { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .mcard .name { color: #fff; font-weight: 500; }
+  .mcard .mdesc { font-size: 10px; color: var(--faint); line-height: 1.3; }
+  .badge { font-size: 9.5px; letter-spacing: .4px; text-transform: uppercase; padding: 2px 6px; border-radius: 6px;
+    border: 1px solid var(--border); color: var(--dim); }
+  .badge.gold { color: var(--gold); border-color: var(--border-active); }
+  .badge.cyan { color: var(--cyan); border-color: rgba(63,210,214,0.45); }
+
+  .row { display: flex; gap: 10px; align-items: flex-end; }
+  .row > div { flex: 1; }
+  .check { display: flex; align-items: center; gap: 8px; }
+  .check input { width: auto; }
+  .check label { margin: 0; font-size: 12px; color: var(--text); }
+
+  .cost { display: flex; align-items: center; justify-content: space-between; font-size: 12px;
+    padding: 9px 11px; border-radius: 10px; background: var(--card2); border: 1px solid var(--border); }
+  .cost .n { color: var(--gold); font-weight: 700; }
+  .cost.over .n { color: #ff8a8a; }
+
+  .actions { display: flex; gap: 10px; margin-top: 2px; }
+  button { flex: 1; padding: 11px; border-radius: 10px; border: 1px solid var(--border);
+    font: inherit; font-weight: 600; cursor: pointer; background: var(--card); color: var(--text);
+    transition: filter .15s, transform .06s; }
+  button:hover { filter: brightness(1.12); }
+  button:active { transform: translateY(0.5px); }
+  button.primary { background: linear-gradient(180deg, #f4d747, var(--gold)); color: #1a1300; border-color: transparent;
+    box-shadow: 0 4px 16px rgba(238,205,43,0.18); }
+  button.primary:disabled { opacity: .4; cursor: default; box-shadow: none; }
+</style>
+</head>
+<body>
+  <div class="brand ssheader">
+    <svg class="ssglyph" viewBox="0 0 130 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs><linearGradient id="ssg" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#eecd2b"/><stop offset="0.6" stop-color="#f6dd5e"/><stop offset="1" stop-color="#f5a63c"/>
+      </linearGradient></defs>
+      <g transform="skewX(-12)" fill="url(#ssg)">
+        <rect x="10" y="15" width="4" height="10" rx="1.5" opacity="0.5"/>
+        <rect x="17" y="12" width="4" height="16" rx="1.5" opacity="0.5"/>
+        <rect x="24" y="9"  width="4" height="22" rx="1.5" opacity="0.5"/>
+        <rect x="31" y="5"  width="4" height="30" rx="1.5"/>
+        <rect x="38" y="8"  width="4" height="24" rx="1.5" opacity="0.5"/>
+        <rect x="45" y="13" width="4" height="14" rx="1.5" opacity="0.5"/>
+        <rect x="52" y="10" width="4" height="20" rx="1.5" opacity="0.5"/>
+        <rect x="59" y="3"  width="4" height="34" rx="1.5"/>
+        <rect x="66" y="6"  width="4" height="28" rx="1.5" opacity="0.5"/>
+        <rect x="73" y="11" width="4" height="18" rx="1.5" opacity="0.5"/>
+        <rect x="80" y="14" width="4" height="12" rx="1.5" opacity="0.5"/>
+        <rect x="87" y="9"  width="4" height="22" rx="1.5" opacity="0.5"/>
+        <rect x="94" y="5"  width="4" height="30" rx="1.5"/>
+        <rect x="101" y="10" width="4" height="20" rx="1.5" opacity="0.5"/>
+        <rect x="108" y="13" width="4" height="14" rx="1.5" opacity="0.5"/>
+        <rect x="115" y="15" width="4" height="10" rx="1.5" opacity="0.5"/>
+      </g>
+    </svg>
+    <div class="sswords"><span class="ss1">FXI</span><span class="ss2">Soundstage</span></div>
+    <button type="button" class="liblink" id="browseLib" title="Browse your saved takes">My library ↗</button>
+  </div>
+
+  <div>
+    <div class="caprow">
+      <label class="cap" for="lyrics">Lyrics</label>
+      <button type="button" class="paste" id="pasteLyrics" title="Paste from clipboard">Paste</button>
+    </div>
+    <textarea id="lyrics" placeholder="Type or paste lyrics… use [Verse] [Chorus] tags. Leave empty for instrumental." autofocus></textarea>
+    <div class="lyrhint" id="lyrHint">Very short lyrics may sing thin — add a few words for a fuller vocal take.</div>
+  </div>
+
+  <div id="melodyCard"></div>
+
+  <div class="models">
+    <div class="mhead"><label class="cap" style="margin:0">Models</label><span class="toggle" id="toggleAll">Select all</span></div>
+    <div id="modelList"></div>
+  </div>
+
+  <div class="row">
+    <div>
+      <label class="cap" for="variants">Samples / model</label>
+      <select id="variants"><option>1</option><option>2</option><option>3</option><option>4</option></select>
+    </div>
+    <div class="check" style="padding-bottom:10px">
+      <input type="checkbox" id="instrumental" /><label for="instrumental">Instrumental</label>
+    </div>
+    <div class="check" style="padding-bottom:10px">
+      <input type="checkbox" id="acapella" /><label for="acapella">A cappella</label>
+    </div>
+  </div>
+
+  <div class="cost" id="cost"><span>Estimated cost</span><span><span class="n" id="costN">0</span> credits</span></div>
+
+  <div class="actions">
+    <button id="cancel">Cancel</button>
+    <button id="go" class="primary">Generate</button>
+  </div>
+
+<script>
+  const bridge = (() => {
+    const wk = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.live;
+    const wv = window.chrome && window.chrome.webview;
+    return (m) => { if (wk) wk.postMessage(m); else if (wv) wv.postMessage(m); };
+  })();
+  const close = (r) => bridge({ method: "close_and_send", params: [JSON.stringify(r)] });
+
+  const models = JSON.parse(document.getElementById("models").textContent || "[]");
+  const melody = JSON.parse(document.getElementById("melody").textContent || "null");
+  const cfg = JSON.parse(document.getElementById("cfg").textContent || "{}");
+  const CREDITS_PER = cfg.creditsPerSample || 10;
+  // Host-read clipboard (the webview can't read it directly). Injected at open.
+  const clipboardText = JSON.parse(document.getElementById("clip").textContent || '""');
+  // Prior inputs to restore when the operator returns here via "← Change lyrics"
+  // from the take browser. null on a fresh open → default behavior unchanged.
+  const prefill = JSON.parse(document.getElementById("prefill").textContent || "null");
+
+  // ── Melody card + piano-roll ───────────────────────────────────────────────
+  const mc = document.getElementById("melodyCard");
+  if (melody && melody.notes && melody.notes.length) {
+    mc.className = "melody";
+    mc.innerHTML =
+      '<div class="hd"><label class="cap" style="margin:0">Melody input</label>' +
+      '<span class="meta">' + melody.noteCount + ' notes · ' + melody.durationSec.toFixed(1) + 's</span></div>' +
+      '<canvas class="roll" id="roll"></canvas>' +
+      '<div class="hint">Drives the melodic contour for melody-capable models.</div>';
+    drawRoll(melody.notes);
+  } else {
+    mc.className = "melody empty";
+    mc.innerHTML = '<label class="cap" style="margin:0">Melody input · optional</label>' +
+      '<div class="hint">To guide the tune: cancel this, <b>right-click a MIDI clip → Use clip as FXI melody</b>, ' +
+      'then right-click the audio track → Generate again. The captured melody shows here and steers melody-capable models. ' +
+      'Leave empty to generate from the prompt alone.</div>';
+  }
+
+  function drawRoll(notes) {
+    const c = document.getElementById("roll");
+    const dpr = window.devicePixelRatio || 1;
+    const w = c.clientWidth, h = 64;
+    c.width = w * dpr; c.height = h * dpr;
+    const ctx = c.getContext("2d"); ctx.scale(dpr, dpr);
+    const pitches = notes.map(n => n.pitch);
+    const minP = Math.min(...pitches) - 1, maxP = Math.max(...pitches) + 1;
+    const span = Math.max(1, maxP - minP);
+    const end = notes.reduce((m, n) => Math.max(m, n.start + n.dur), 0.001);
+    // faint grid
+    ctx.strokeStyle = "rgba(255,255,255,0.05)"; ctx.lineWidth = 1;
+    for (let i = 1; i < 4; i++) { const x = (w / 4) * i; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+    // notes (cyan = the melody/data accent)
+    ctx.fillStyle = "#3fd2d6";
+    for (const n of notes) {
+      const x = (n.start / end) * (w - 4) + 2;
+      const nw = Math.max(2, (n.dur / end) * (w - 4));
+      const y = h - ((n.pitch - minP) / span) * (h - 8) - 6;
+      roundRect(ctx, x, y, nw, 4, 2); ctx.fill();
+    }
+  }
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath(); ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+
+  // ── Model selection ─────────────────────────────────────────────────────────
+  const hasMelody = !!(melody && melody.notes && melody.notes.length);
+  // One-line helper per model so the picker explains what each does. "FXI Song"
+  // is melody-GUIDED (Suno cover follows the captured melody), not note-exact —
+  // copy reflects that honestly.
+  const MODEL_DESC = {
+    "fxi-song": "Full song w/ vocals — sings your lyrics, follows a captured melody.",
+    "fxi-bed": "Instrumental backing track. No vocals — a fast bed to write over.",
+    "fxi-bed-pro": "Higher-fidelity instrumental. No vocals — richer, finished beds.",
+    "fxi-longform": "Longer song w/ vocals — sings your lyrics, generates its own tune.",
+  };
+  const selected = new Set();
+  const list = document.getElementById("modelList");
+  const available = models.filter(m => m.available);
+  available.forEach((m, i) => {
+    const card = document.createElement("div");
+    card.className = "mcard";
+    const badges =
+      (m.supportsVocals ? '<span class="badge">Vocals</span>' : '') +
+      (m.supportsMelody ? '<span class="badge cyan">Melody</span>' : '');
+    const desc = MODEL_DESC[m.id] || "";
+    card.innerHTML = '<div class="box"></div><div class="minfo"><div class="name">' + m.label + '</div>' +
+      (desc ? '<div class="mdesc">' + desc + '</div>' : '') + '</div>' + badges;
+    card.addEventListener("click", () => {
+      if (selected.has(m.id)) { selected.delete(m.id); card.classList.remove("on"); }
+      else { selected.add(m.id); card.classList.add("on"); }
+      recost();
+    });
+    list.appendChild(card);
+    // default: SUNO (fxi-song) for a captured melody — it covers the melody via
+    // Suno's Upload-And-Cover (preserves contour, adds style/vocals); else first model.
+    if ((hasMelody && m.id === "fxi-song" && selected.size === 0) || (!hasMelody && i === 0 && selected.size === 0)) {
+      selected.add(m.id); card.classList.add("on");
+    }
+  });
+
+  document.getElementById("toggleAll").addEventListener("click", () => {
+    const all = selected.size === available.length;
+    selected.clear();
+    [...list.children].forEach((card, i) => {
+      if (all) card.classList.remove("on");
+      else { selected.add(available[i].id); card.classList.add("on"); }
+    });
+    document.getElementById("toggleAll").textContent = all ? "Select all" : "Clear all";
+    recost();
+  });
+
+  // ── Live cost ────────────────────────────────────────────────────────────────
+  const variantsSel = document.getElementById("variants");
+  const costEl = document.getElementById("cost"), costN = document.getElementById("costN");
+  function recost() {
+    const n = Math.min(selected.size * Number(variantsSel.value), 8) * CREDITS_PER;
+    costN.textContent = n;
+    document.getElementById("go").disabled = selected.size === 0;
+  }
+  variantsSel.addEventListener("change", recost);
+  recost();
+
+  // Instrumental (no vocals) and A cappella (vocals only) are mutually exclusive.
+  const instrEl = document.getElementById("instrumental");
+  const acapEl = document.getElementById("acapella");
+  instrEl.addEventListener("change", () => { if (instrEl.checked) acapEl.checked = false; });
+  acapEl.addEventListener("change", () => { if (acapEl.checked) instrEl.checked = false; });
+
+  // ── Prefill (return-from-browser) ──────────────────────────────────────────
+  // Restore the operator's prior lyrics + model/variant/mode choices so "←
+  // Change lyrics" lands them back on their own inputs, not a blank form.
+  if (prefill && Array.isArray(prefill.models)) {
+    selected.clear();
+    [...list.children].forEach((card, i) => {
+      if (prefill.models.includes(available[i].id)) { selected.add(available[i].id); card.classList.add("on"); }
+      else card.classList.remove("on");
+    });
+    document.getElementById("lyrics").value = prefill.lyrics || "";
+    if (prefill.variants) variantsSel.value = String(prefill.variants);
+    instrEl.checked = !!prefill.instrumental;
+    acapEl.checked = !!prefill.acapella;
+    document.getElementById("toggleAll").textContent =
+      selected.size === available.length ? "Clear all" : "Select all";
+    recost();
+  }
+
+  // ── Short-lyrics nudge ──────────────────────────────────────────────────────
+  // Belt-and-suspenders to the server fix: a sung take needs real lyrics. Surface
+  // a soft, non-blocking hint when the lyric is too thin (a single word / <6
+  // chars) and vocals are wanted — never disables Generate.
+  const lyrEl = document.getElementById("lyrics");
+  const lyrHint = document.getElementById("lyrHint");
+  function updateLyrHint() {
+    const v = lyrEl.value.trim();
+    const words = v ? v.split(/\s+/).filter(Boolean).length : 0;
+    const tooThin = v.length > 0 && !instrEl.checked && (words < 2 || v.length < 6);
+    lyrHint.classList.toggle("show", tooThin);
+  }
+  lyrEl.addEventListener("input", updateLyrHint);
+  instrEl.addEventListener("change", updateLyrHint);
+  acapEl.addEventListener("change", updateLyrHint);
+  updateLyrHint();
+
+  // ── Submit ────────────────────────────────────────────────────────────────────
+  document.getElementById("go").addEventListener("click", () => {
+    if (selected.size === 0) return;
+    close({
+      lyrics: document.getElementById("lyrics").value.trim(),
+      models: [...selected],
+      variants: Number(variantsSel.value),
+      instrumental: document.getElementById("instrumental").checked,
+      acapella: document.getElementById("acapella").checked,
+    });
+  });
+  document.getElementById("cancel").addEventListener("click", () => close({ cancelled: true }));
+  // Browse previously generated takes instead of composing a new one.
+  document.getElementById("browseLib").addEventListener("click", () => close({ library: true }));
+
+  // ── Clipboard paste ───────────────────────────────────────────────────────────
+  // The webview may swallow ⌘V/Ctrl+V, so offer an explicit Paste affordance.
+  // navigator.clipboard.readText() needs a user gesture (the button click) — on
+  // failure we just focus the field so a manual paste still works.
+  async function clipText() {
+    if (clipboardText) return clipboardText;            // host-read (reliable)
+    try { return await navigator.clipboard.readText(); } catch { return ""; } // fallback
+  }
+  async function pasteInto(el) {
+    const t = await clipText();
+    if (!t) { el.focus(); return; }
+    const s = el.selectionStart ?? el.value.length, e = el.selectionEnd ?? el.value.length;
+    el.value = el.value.slice(0, s) + t + el.value.slice(e);
+    const p = s + t.length;
+    try { el.setSelectionRange(p, p); } catch {}
+    el.focus();
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  document.getElementById("pasteLyrics").addEventListener("click", () => pasteInto(document.getElementById("lyrics")));
+
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") close({ cancelled: true }); });
+</script>
+</body>
+</html>

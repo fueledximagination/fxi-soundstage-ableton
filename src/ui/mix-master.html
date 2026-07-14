@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FXI Studio — Mix Master</title>
+<script id="templates" type="application/json">__TEMPLATES_JSON__</script>
+<script id="clip" type="application/json">__CLIPBOARD_JSON__</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  * { margin: 0; }
+  :root {
+    --bg: #050505; --card: hsl(0,0%,9%); --card2: hsl(0,0%,13%); --input: hsl(0,0%,6%);
+    --border: rgba(255,255,255,0.08); --border-active: rgba(238,205,43,0.45);
+    --text: #FFFFFF; --dim: rgba(235,235,245,0.6); --faint: rgba(235,235,245,0.3);
+    --gold: #eecd2b; --cyan: #3fd2d6; --sodium: #f5a63c;
+  }
+  html { height: 100%; }
+  body {
+    height: 100%; color: var(--text);
+    font-family: "AbletonSansSmall", Inter, system-ui, sans-serif; font-size: 12.5px;
+    -webkit-font-smoothing: antialiased; padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto;
+    background:
+      radial-gradient(120% 80% at 50% -10%, rgba(238,205,43,0.07), transparent 60%),
+      radial-gradient(90% 60% at 110% 110%, rgba(63,210,214,0.045), transparent 55%),
+      var(--bg);
+  }
+  .brand { display: flex; align-items: center; gap: 8px; }
+  .brand .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 12px rgba(238,205,43,0.7), 0 0 2px rgba(238,205,43,1); }
+  .brand h1 { font-size: 13px; font-weight: 600; color: #fff; letter-spacing: .3px; }
+  .brand h1 span { background: linear-gradient(92deg, var(--gold), #f6dd5e); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  label.cap { display: block; font-size: 10.5px; color: var(--dim); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .7px; }
+  select, input[type="url"] {
+    width: 100%; background: var(--input); color: var(--text);
+    border: 1px solid var(--border); border-radius: 10px; padding: 10px 11px; font: inherit;
+  }
+  select:focus { outline: none; border-color: var(--border-active); }
+  /* Reference is the measurement/data path — focus glows cyan, not gold. */
+  input[type="url"]:focus { outline: none; border-color: rgba(63,210,214,0.55);
+    box-shadow: inset 0 0 0 1px rgba(63,210,214,0.14); }
+  .desc { font-size: 11.5px; color: var(--faint); line-height: 1.4; margin-top: 6px; min-height: 30px; }
+
+  .caprow { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .caprow .cap { margin: 0; }
+  .paste { background: transparent; border: 1px solid var(--border); color: var(--gold);
+    font: inherit; font-size: 10px; font-weight: 600; letter-spacing: .4px; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 7px; cursor: pointer; }
+  .paste:hover { border-color: var(--border-active); background: rgba(238,205,43,0.07); }
+
+  /* mode tabs */
+  .tabs { display: flex; gap: 8px; }
+  .tab { flex: 1; text-align: center; padding: 8px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--card); color: var(--dim); cursor: pointer; user-select: none; font-weight: 500; }
+  .tab.on { border-color: var(--border-active); color: #fff; box-shadow: inset 0 0 20px rgba(255,255,255,0.04); }
+
+  .pane { display: none; }
+  .pane.on { display: block; }
+
+  .seg { display: flex; gap: 8px; }
+  .seg .opt { flex: 1; text-align: center; padding: 8px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--card); color: var(--dim); cursor: pointer; user-select: none; }
+  .seg .opt.on { border-color: var(--border-active); color: #fff; }
+
+  .note { font-size: 11px; color: var(--faint); line-height: 1.4; }
+
+  .actions { display: flex; gap: 10px; margin-top: 2px; }
+  button { flex: 1; padding: 11px; border-radius: 10px; border: 1px solid var(--border);
+    font: inherit; font-weight: 600; cursor: pointer; background: var(--card); color: var(--text);
+    transition: filter .15s, transform .06s; }
+  button:hover { filter: brightness(1.12); }
+  button:active { transform: translateY(0.5px); }
+  button.primary { background: linear-gradient(180deg, #f4d747, var(--gold)); color: #1a1300; border-color: transparent;
+    box-shadow: 0 4px 16px rgba(238,205,43,0.18); }
+  button.primary:disabled { opacity: .4; cursor: default; box-shadow: none; }
+</style>
+</head>
+<body>
+  <div class="brand"><div class="dot"></div><h1>Match mix with <span>FXI Studio</span></h1></div>
+
+  <div class="tabs">
+    <div class="tab on" id="tabTemplate" data-mode="template">Template</div>
+    <div class="tab" id="tabReference" data-mode="reference">Reference URL</div>
+  </div>
+
+  <!-- Template pane -->
+  <div class="pane on" id="paneTemplate">
+    <label class="cap" for="templateSel">Mix template</label>
+    <select id="templateSel"></select>
+    <div class="desc" id="templateDesc"></div>
+  </div>
+
+  <!-- Reference pane (advanced) -->
+  <div class="pane" id="paneReference">
+    <div class="caprow">
+      <label class="cap" for="refUrl">Reference audio URL</label>
+      <button type="button" class="paste" id="pasteRef" title="Paste from clipboard">Paste</button>
+    </div>
+    <input type="url" id="refUrl" placeholder="https://…/reference.wav" />
+    <div class="note">Advanced. A decodable WAV is measured for an exact match; compressed formats fall back to a heuristic. https only.</div>
+  </div>
+
+  <div>
+    <label class="cap">Mix profile</label>
+    <div class="seg">
+      <div class="opt on" id="targetMaster" data-target="master">Master chain</div>
+      <div class="opt" id="targetTrack" data-target="track">Track mix</div>
+    </div>
+    <div class="note">Applied to the selected track's devices &amp; mixer. “Master chain” is a full mastering profile; “Track mix” is a lighter per-track balance.</div>
+  </div>
+
+  <div class="actions">
+    <button id="cancel">Cancel</button>
+    <button id="go" class="primary">Match mix</button>
+  </div>
+
+<script>
+  const bridge = (() => {
+    const wk = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.live;
+    const wv = window.chrome && window.chrome.webview;
+    return (m) => { if (wk) wk.postMessage(m); else if (wv) wv.postMessage(m); };
+  })();
+  const close = (r) => bridge({ method: "close_and_send", params: [JSON.stringify(r)] });
+
+  const templates = JSON.parse(document.getElementById("templates").textContent || "[]");
+
+  let mode = "template";
+  let target = "master";
+
+  // ── Template dropdown ─────────────────────────────────────────────────────────
+  const sel = document.getElementById("templateSel");
+  const descEl = document.getElementById("templateDesc");
+  templates.forEach((t) => {
+    const o = document.createElement("option");
+    o.value = t.key; o.textContent = t.label;
+    sel.appendChild(o);
+  });
+  function syncDesc() {
+    const t = templates.find((x) => x.key === sel.value);
+    descEl.textContent = t ? t.description : "";
+  }
+  sel.addEventListener("change", syncDesc);
+  syncDesc();
+
+  // ── Mode tabs ─────────────────────────────────────────────────────────────────
+  const tabs = [document.getElementById("tabTemplate"), document.getElementById("tabReference")];
+  const panes = { template: document.getElementById("paneTemplate"), reference: document.getElementById("paneReference") };
+  tabs.forEach((tab) => tab.addEventListener("click", () => {
+    mode = tab.dataset.mode;
+    tabs.forEach((t) => t.classList.toggle("on", t === tab));
+    panes.template.classList.toggle("on", mode === "template");
+    panes.reference.classList.toggle("on", mode === "reference");
+  }));
+
+  // ── Target segmented control ──────────────────────────────────────────────────
+  const targets = [document.getElementById("targetMaster"), document.getElementById("targetTrack")];
+  targets.forEach((opt) => opt.addEventListener("click", () => {
+    target = opt.dataset.target;
+    targets.forEach((o) => o.classList.toggle("on", o === opt));
+  }));
+
+  // ── Submit ──────────────────────────────────────────────────────────────────────
+  document.getElementById("go").addEventListener("click", () => {
+    if (mode === "reference") {
+      const url = document.getElementById("refUrl").value.trim();
+      if (!/^https:\/\//i.test(url)) { document.getElementById("refUrl").focus(); return; }
+      close({ mode: "reference", referenceUrl: url, target });
+    } else {
+      close({ mode: "template", templateKey: sel.value, target });
+    }
+  });
+  document.getElementById("cancel").addEventListener("click", () => close({ cancelled: true }));
+
+  // ── Clipboard paste ───────────────────────────────────────────────────────────
+  // The webview can't read the clipboard (data: URL opaque origin), so the host
+  // pre-reads it and injects it here; fall back to the web API if empty.
+  const clipboardText = JSON.parse(document.getElementById("clip").textContent || '""');
+  async function clipText() {
+    if (clipboardText) return clipboardText;
+    try { return await navigator.clipboard.readText(); } catch { return ""; }
+  }
+  async function pasteInto(el) {
+    const t = (await clipText()).trim();
+    if (!t) { el.focus(); return; }
+    const s = el.selectionStart ?? el.value.length, e = el.selectionEnd ?? el.value.length;
+    el.value = el.value.slice(0, s) + t + el.value.slice(e);
+    const p = s + t.length;
+    try { el.setSelectionRange(p, p); } catch {}
+    el.focus();
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  document.getElementById("pasteRef").addEventListener("click", () => pasteInto(document.getElementById("refUrl")));
+
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") close({ cancelled: true }); });
+</script>
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FXI Studio — Enhance Vocals</title>
+<script id="cfg" type="application/json">__CFG_JSON__</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  * { margin: 0; }
+  :root {
+    --bg: #050505; --card: hsl(0,0%,11%); --card2: hsl(0,0%,14%); --input: hsl(0,0%,6%);
+    --border: rgba(255,255,255,0.08); --border-active: rgba(238,205,43,0.55);
+    --text: #FFFFFF; --dim: rgba(235,235,245,0.6); --faint: rgba(235,235,245,0.3);
+    --gold: #eecd2b; --cyan: #3fd2d6; --sodium: #f5a63c;
+  }
+  html { height: 100%; }
+  body {
+    height: 100%; color: var(--text);
+    font-family: "AbletonSansSmall", Inter, system-ui, sans-serif; font-size: 12.5px;
+    -webkit-font-smoothing: antialiased; padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto;
+    background:
+      radial-gradient(120% 80% at 50% -10%, rgba(238,205,43,0.08), transparent 60%),
+      radial-gradient(90% 60% at 110% 110%, rgba(63,210,214,0.05), transparent 55%),
+      var(--bg);
+  }
+  /* Brand */
+  .brand { display: flex; align-items: center; gap: 9px; }
+  .brand .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--gold);
+    box-shadow: 0 0 12px rgba(238,205,43,0.7), 0 0 2px rgba(238,205,43,1); }
+  .brand h1 { font-size: 13.5px; font-weight: 600; letter-spacing: .3px;
+    background: linear-gradient(92deg, #fff 30%, var(--gold)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .sub { font-size: 11px; color: var(--faint); margin-top: -4px; }
+
+  /* Header + help */
+  .hdr { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .help-btn { flex: none; background: transparent; border: 1px solid var(--border); color: var(--gold);
+    font: inherit; font-size: 10px; font-weight: 600; letter-spacing: .4px; text-transform: uppercase;
+    padding: 5px 9px; border-radius: 8px; cursor: pointer; }
+  .help-btn:hover { border-color: var(--border-active); background: rgba(238,205,43,0.07); }
+  .help { display: none; flex-direction: column; gap: 8px; padding: 12px 13px; border-radius: 12px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012)); border: 1px solid var(--border); }
+  .help.show { display: flex; }
+  .help h2 { font-size: 10.5px; color: var(--gold); text-transform: uppercase; letter-spacing: .6px; }
+  .help ul { margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+  .help li { font-size: 11.5px; color: var(--dim); line-height: 1.45; list-style: none; padding-left: 15px; position: relative; }
+  .help li::before { content: ""; position: absolute; left: 2px; top: 6px; width: 5px; height: 5px; border-radius: 50%; background: var(--gold); opacity: .7; }
+  .help li b { color: #fff; font-weight: 600; }
+
+  label.cap { display: block; font-size: 10.5px; color: var(--dim); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .7px; }
+
+  /* Source chip */
+  .src { display: flex; align-items: center; gap: 9px; padding: 9px 11px; border-radius: 11px;
+    background: linear-gradient(180deg, rgba(63,210,214,0.06), rgba(63,210,214,0.02));
+    border: 1px solid rgba(63,210,214,0.28); }
+  .src .wave { display: flex; align-items: flex-end; gap: 2px; height: 16px; }
+  .src .wave i { width: 2px; border-radius: 2px; background: var(--cyan); opacity: .85; }
+  .src .t { font-size: 11.5px; color: var(--cyan); }
+
+  /* Mode toggle */
+  .modes { display: flex; flex-direction: column; gap: 9px; }
+  .mode { position: relative; display: flex; gap: 11px; padding: 12px; border-radius: 13px; cursor: pointer;
+    border: 1px solid var(--border); background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    transition: border-color .15s, box-shadow .15s, transform .06s; }
+  .mode:hover { border-color: rgba(255,255,255,0.16); }
+  .mode:active { transform: translateY(0.5px); }
+  .mode.on { border-color: var(--border-active); box-shadow: inset 0 0 22px rgba(238,205,43,0.07), 0 0 0 1px rgba(238,205,43,0.12); }
+  .mode .ic { width: 34px; height: 34px; flex: none; border-radius: 9px; display: grid; place-items: center; font-size: 17px;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border); }
+  .mode.on .ic { background: rgba(238,205,43,0.12); border-color: var(--border-active); }
+  .mode .body { flex: 1; min-width: 0; }
+  .mode .ttl { font-weight: 600; color: #fff; display: flex; align-items: center; gap: 7px; }
+  .mode .ttl .pill { font-size: 9px; letter-spacing: .4px; text-transform: uppercase; padding: 2px 6px; border-radius: 6px;
+    color: var(--gold); border: 1px solid var(--border-active); }
+  .mode .desc { font-size: 11px; color: var(--dim); margin-top: 3px; line-height: 1.4; }
+  .mode .rad { position: absolute; top: 12px; right: 12px; width: 16px; height: 16px; border-radius: 50%;
+    border: 1px solid var(--faint); }
+  .mode.on .rad { border-color: var(--gold); background: var(--gold); }
+  .mode.on .rad::after { content: "✓"; position: absolute; inset: 0; display: grid; place-items: center; color: #1a1300; font-size: 10px; font-weight: 800; }
+
+  /* Re-sing extra fields (revealed) */
+  .extra { display: none; flex-direction: column; gap: 9px; }
+  .extra.show { display: flex; }
+  input[type="text"], textarea {
+    width: 100%; background: var(--input); color: var(--text);
+    border: 1px solid var(--border); border-radius: 10px; padding: 10px 11px; font: inherit; }
+  textarea { resize: none; min-height: 52px; height: 52px; line-height: 1.4; }
+  input:focus, textarea:focus { outline: none; border-color: var(--border-active); box-shadow: inset 0 0 0 1px rgba(238,205,43,0.12); }
+
+  .cost { display: flex; align-items: center; justify-content: space-between; font-size: 12px;
+    padding: 9px 11px; border-radius: 10px; background: var(--card2); border: 1px solid var(--border); }
+  .cost .n { color: var(--gold); font-weight: 700; }
+
+  .actions { display: flex; gap: 10px; margin-top: auto; }
+  button { flex: 1; padding: 12px; border-radius: 11px; border: 1px solid var(--border);
+    font: inherit; font-weight: 600; cursor: pointer; background: var(--card); color: var(--text);
+    transition: filter .15s, transform .06s; }
+  button:hover { filter: brightness(1.12); }
+  button:active { transform: translateY(0.5px); }
+  button.primary { background: linear-gradient(180deg, #f4d747, var(--gold)); color: #1a1300; border-color: transparent;
+    box-shadow: 0 4px 16px rgba(238,205,43,0.18); }
+</style>
+</head>
+<body>
+  <div class="hdr">
+    <div>
+      <div class="brand"><div class="dot"></div><h1>Enhance Vocals</h1></div>
+      <div class="sub">Pro-grade vocals from your sung take</div>
+    </div>
+    <button class="help-btn" id="helpBtn" type="button">ⓘ How it works</button>
+  </div>
+
+  <div class="help" id="help">
+    <h2>How it works</h2>
+    <ul>
+      <li>Right-click the track holding your sung take — FXI uses its first audio clip. Consolidate the clip (⌘/Ctrl-J) if nothing is found.</li>
+      <li><b>Vocal-Max</b> keeps your own voice: removes noise, restores detail, and polishes to a studio finish. Best on a dry recording.</li>
+      <li><b>Isolate Vocals</b> separates any track and gives you the clean vocal — instruments and remnant bleed removed (the instrumental is the inverse).</li>
+      <li><b>Re-sing</b> replaces your vocal with an AI performance of the same melody &amp; lyrics in a style you choose.</li>
+      <li>For the cleanest result, sing a dry vocal (no heavy reverb or autotune), roughly <b>8–60 seconds</b>.</li>
+      <li>The enhanced take drops back into your set when it's ready (about a minute).</li>
+    </ul>
+  </div>
+
+  <div class="src">
+    <div class="wave" id="wave"></div>
+    <div class="t">Your take — uploaded</div>
+  </div>
+
+  <div class="modes">
+    <div class="mode on" data-mode="vocal-max">
+      <div class="ic">🎙️</div>
+      <div class="body">
+        <div class="ttl">Vocal-Max <span class="pill">your voice</span></div>
+        <div class="desc">Keeps your own voice — de-noise, restore detail, and polish to a studio finish.</div>
+      </div>
+      <div class="rad"></div>
+    </div>
+    <div class="mode" data-mode="re-sing">
+      <div class="ic">✨</div>
+      <div class="body">
+        <div class="ttl">Re-sing <span class="pill">AI vocal</span></div>
+        <div class="desc">AI re-performs your melody and lyrics in a clean professional style.</div>
+      </div>
+      <div class="rad"></div>
+    </div>
+    <div class="mode" data-mode="isolate-vocals">
+      <div class="ic">🎚️</div>
+      <div class="body">
+        <div class="ttl">Isolate Vocals <span class="pill">a cappella</span></div>
+        <div class="desc">Pull the clean vocal out of any mix — strips instruments and remnant bleed. Works on any clip.</div>
+      </div>
+      <div class="rad"></div>
+    </div>
+    <div class="mode" data-mode="isolate-instrumental">
+      <div class="ic">🎛️</div>
+      <div class="body">
+        <div class="ttl">Isolate Instrumental <span class="pill">backing</span></div>
+        <div class="desc">Pull the backing track out of any mix — vocals removed. The inverse of Isolate Vocals. Works on any clip.</div>
+      </div>
+      <div class="rad"></div>
+    </div>
+  </div>
+
+  <div class="extra" id="extra">
+    <div>
+      <label class="cap" for="style">Style — optional</label>
+      <input type="text" id="style" placeholder="e.g. warm soul ballad, female lead, lush harmonies" />
+    </div>
+    <div>
+      <label class="cap" for="lyrics">Lyrics — optional</label>
+      <textarea id="lyrics" placeholder="Leave empty to keep your original lyrics/melody."></textarea>
+    </div>
+  </div>
+
+  <div>
+    <label class="cap" for="title">Title — optional</label>
+    <input type="text" id="title" placeholder="Untitled take" />
+  </div>
+
+  <div class="cost"><span>Estimated cost</span><span><span class="n" id="costN">0</span> credits</span></div>
+
+  <div class="actions">
+    <button id="cancel">Cancel</button>
+    <button id="go" class="primary">Enhance</button>
+  </div>
+
+<script>
+  const bridge = (() => {
+    const wk = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.live;
+    const wv = window.chrome && window.chrome.webview;
+    return (m) => { if (wk) wk.postMessage(m); else if (wv) wv.postMessage(m); };
+  })();
+  const close = (r) => bridge({ method: "close_and_send", params: [JSON.stringify(r)] });
+
+  const cfg = JSON.parse(document.getElementById("cfg").textContent || "{}");
+  const CREDITS_PER = cfg.creditsPerSample || 10;
+  document.getElementById("costN").textContent = CREDITS_PER;
+
+  // Decorative waveform bars.
+  const wave = document.getElementById("wave");
+  const heights = [5, 9, 14, 8, 12, 6, 15, 10, 7, 13, 9, 5];
+  wave.innerHTML = heights.map((h) => '<i style="height:' + h + 'px"></i>').join("");
+
+  // Help panel toggle.
+  document.getElementById("helpBtn").addEventListener("click", () => {
+    document.getElementById("help").classList.toggle("show");
+  });
+
+  // Mode selection.
+  let mode = "vocal-max";
+  const extra = document.getElementById("extra");
+  document.querySelectorAll(".mode").forEach((el) => {
+    el.addEventListener("click", () => {
+      document.querySelectorAll(".mode").forEach((m) => m.classList.remove("on"));
+      el.classList.add("on");
+      mode = el.getAttribute("data-mode");
+      extra.classList.toggle("show", mode === "re-sing");
+    });
+  });
+
+  document.getElementById("go").addEventListener("click", () => {
+    close({
+      mode,
+      style: document.getElementById("style").value.trim() || undefined,
+      lyrics: document.getElementById("lyrics").value.trim() || undefined,
+      title: document.getElementById("title").value.trim() || undefined,
+    });
+  });
+  document.getElementById("cancel").addEventListener("click", () => close({ cancelled: true }));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") close({ cancelled: true }); });
+</script>
+</body>
+</html>

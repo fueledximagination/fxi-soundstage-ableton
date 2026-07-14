@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FXI Studio — Samples</title>
+<script id="samples" type="application/json">__SAMPLES_JSON__</script>
+<script id="mode" type="application/json">__BROWSER_MODE_JSON__</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  * { margin: 0; }
+  :root {
+    --bg: #050505; --card: hsl(0,0%,11%); --border: rgba(255,255,255,0.08);
+    --text: #FFFFFF; --text-dim: rgba(235,235,245,0.6); --gold: #eecd2b;
+    --cyan: #3fd2d6; --sodium: #f5a63c;
+  }
+  html { height: 100%; }
+  body {
+    height: 100%; color: var(--text);
+    font-family: "AbletonSansSmall", Inter, system-ui, sans-serif; font-size: 12.5px;
+    -webkit-font-smoothing: antialiased; padding: 18px; display: flex; flex-direction: column; gap: 12px;
+    background:
+      radial-gradient(120% 80% at 50% -10%, rgba(238,205,43,0.07), transparent 60%),
+      radial-gradient(90% 60% at 110% 110%, rgba(63,210,214,0.045), transparent 55%),
+      var(--bg);
+  }
+  .brand { display: flex; align-items: center; gap: 8px; }
+  .brand .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 12px rgba(238,205,43,0.7), 0 0 2px rgba(238,205,43,1); }
+  .brand h1 { font-size: 13px; font-weight: 600; color: #fff; letter-spacing: .3px; }
+  .brand h1 span { background: linear-gradient(92deg, var(--gold), #f6dd5e); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .lead { font-size: 12px; color: var(--text-dim); }
+  .list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+  .sample {
+    border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: var(--card);
+    display: flex; flex-direction: column; gap: 9px;
+  }
+  .sample .hd { display: flex; align-items: center; gap: 8px; }
+  .sample h2 { font-size: 12.5px; font-weight: 600; color: #fff; flex: 1; }
+  .sample .badge { font-size: 9.5px; letter-spacing: .4px; text-transform: uppercase; padding: 2px 7px;
+    border-radius: 6px; border: 1px solid rgba(238,205,43,0.45); color: var(--gold); }
+  .sample .meta { font-size: 11px; color: var(--text-dim); }
+  audio { width: 100%; height: 32px; }
+  .insert {
+    align-self: flex-start; padding: 8px 14px; border-radius: 9px; border: 1px solid transparent;
+    background: var(--gold); color: #1a1300; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .cancel {
+    padding: 10px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--card); color: var(--text); font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .regen {
+    padding: 10px; border-radius: 10px; border: 1px solid rgba(238,205,43,0.5);
+    background: rgba(238,205,43,0.08); color: var(--gold); font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .regen:hover { background: rgba(238,205,43,0.14); }
+  .stems-opt {
+    display: flex; align-items: flex-start; gap: 9px; padding: 11px 12px; border-radius: 11px;
+    border: 1px solid var(--border); background: var(--card); cursor: pointer; user-select: none;
+  }
+  .stems-opt input { margin-top: 2px; accent-color: var(--gold); width: 15px; height: 15px; cursor: pointer; }
+  .stems-opt .copy { display: flex; flex-direction: column; gap: 2px; }
+  .stems-opt .copy strong { font-size: 12px; font-weight: 600; color: #fff; }
+  .stems-opt .copy span { font-size: 10.5px; color: var(--text-dim); line-height: 1.4; }
+  .stems-title { font-size: 10.5px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .7px; margin-top: 2px; }
+  .note { font-size: 10.5px; color: var(--text-dim); line-height: 1.4; text-align: center; }
+  .note b { color: var(--gold); }
+  /* Scrollable take list + non-shrinking footer so nothing clips (operator). */
+  .list { min-height: 90px; }
+  .footer { flex-shrink: 0; display: flex; flex-direction: column; gap: 11px; }
+  .sample { cursor: pointer; }
+  .sample.selected { border-color: rgba(238,205,43,0.6); box-shadow: inset 0 0 20px rgba(238,205,43,0.06); }
+  .place { display: flex; flex-direction: column; gap: 6px; }
+  .place .row { display: flex; gap: 6px; }
+  .seg { flex: 1; padding: 8px 6px; border-radius: 9px; border: 1px solid var(--border);
+    background: var(--card); color: var(--text-dim); font: inherit; font-size: 11px; font-weight: 600;
+    cursor: pointer; text-align: center; }
+  .seg.active { border-color: rgba(238,205,43,0.55); color: var(--gold); background: rgba(238,205,43,0.08); }
+  .seg small { display: block; font-size: 9px; font-weight: 500; opacity: .7; letter-spacing: .2px; }
+  .extract { padding: 11px; border-radius: 10px; border: 1px solid rgba(63,210,214,0.5);
+    background: rgba(63,210,214,0.12); color: var(--cyan); font: inherit; font-weight: 600; cursor: pointer; }
+  .extract:hover { background: rgba(63,210,214,0.2); }
+  .extract:disabled { opacity: .45; cursor: not-allowed; }
+  #genOnly { display: flex; flex-direction: column; gap: 12px; }
+  #back { border-color: rgba(238,205,43,0.5); color: var(--gold); }
+</style>
+</head>
+<body>
+  <div class="brand"><span class="dot"></span><h1>FXI <span>SoundStage</span></h1></div>
+  <p class="lead" id="lead">Pick a sample to add to Live</p>
+  <div class="list" id="list"></div>
+  <div class="footer">
+    <div class="place" id="place">
+      <div class="stems-title">Add to Live — placement</div>
+      <div class="row">
+        <button type="button" class="seg active" data-place="new">New track<small>recommended</small></button>
+        <button type="button" class="seg" data-place="replace">Replace<small>same track</small></button>
+        <button type="button" class="seg" data-place="beside">Beside<small>after clip</small></button>
+      </div>
+    </div>
+    <div id="genOnly">
+      <div class="stems-title">Also extract — each on its own new track (takes a few minutes)</div>
+      <label class="stems-opt">
+        <input type="checkbox" id="stemVocal" />
+        <span class="copy"><strong>Vocals (a cappella)</strong><span>Isolated vocal — no instruments.</span></span>
+      </label>
+      <label class="stems-opt">
+        <input type="checkbox" id="stemInstrumental" />
+        <span class="copy"><strong>Instrumental</strong><span>Backing track with the vocals removed.</span></span>
+      </label>
+      <label class="stems-opt">
+        <input type="checkbox" id="stemWav" />
+        <span class="copy"><strong>WAV master</strong><span>Lossless full mix.</span></span>
+      </label>
+      <button class="extract" id="extract" disabled>Extract selected → Live</button>
+      <p class="note">Extracts the selected take (tap a card to choose). Every take is also saved to your account at <b>fxi.studio/soundstage</b>.</p>
+      <button class="regen" id="regen">↻ Generate again — same settings</button>
+    </div>
+    <button class="cancel" id="back">← Change lyrics</button>
+    <button class="cancel" id="cancel">Cancel</button>
+  </div>
+<script>
+  const bridge = (() => {
+    const wk = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.live;
+    const wv = window.chrome && window.chrome.webview;
+    return (msg) => { if (wk) wk.postMessage(msg); else if (wv) wv.postMessage(msg); };
+  })();
+  function close(result) { bridge({ method: "close_and_send", params: [JSON.stringify(result)] }); }
+
+  const samples = JSON.parse(document.getElementById("samples").textContent || "[]");
+  // "takes" (post-generation, default) | "library" (saved-sample browser).
+  const mode = JSON.parse(document.getElementById("mode").textContent || '"takes"');
+  const isLibrary = mode === "library";
+  if (isLibrary) {
+    document.getElementById("lead").textContent =
+      "Pick a saved take — add it, or make an instrumental / a cappella / WAV from it";
+    document.getElementById("back").textContent = "← Back";
+    // A saved take CAN be re-processed into stems, but there are no generation
+    // settings to "Generate again" from here — hide only that control, and keep
+    // the Extract (instrumental / a cappella / WAV) tools available.
+    const regen = document.getElementById("regen");
+    if (regen) regen.style.display = "none";
+    const stTitle = document.querySelector("#genOnly .stems-title");
+    if (stTitle)
+      stTitle.textContent = "Make from this take — each on its own new track (takes a few minutes)";
+    const note = document.querySelector("#genOnly .note");
+    if (note)
+      note.innerHTML = "Derives from the selected saved take — tap a card to choose which one.";
+  }
+  // "Add to Live" placement — non-destructive "new track" by default.
+  let placement = "new";
+  document.querySelectorAll(".seg").forEach((seg) => {
+    seg.addEventListener("click", () => {
+      placement = seg.dataset.place;
+      document.querySelectorAll(".seg").forEach((s) => s.classList.remove("active"));
+      seg.classList.add("active");
+    });
+  });
+
+  // The take the "Extract selected → Live" button operates on. Defaults to the
+  // first take; tapping any card re-selects it.
+  let selectedTakeId = samples.length ? samples[0].trackId : null;
+
+  const list = document.getElementById("list");
+  samples.forEach((s, i) => {
+    const card = document.createElement("div");
+    card.className = "sample" + (i === 0 ? " selected" : "");
+    card.addEventListener("click", (e) => {
+      if (e.target.closest("button") || e.target.closest("audio")) return;
+      selectedTakeId = s.trackId;
+      document.querySelectorAll(".sample.selected").forEach((el) => el.classList.remove("selected"));
+      card.classList.add("selected");
+    });
+
+    const hd = document.createElement("div");
+    hd.className = "hd";
+    const title = document.createElement("h2");
+    title.textContent = s.title || ("Take " + (i + 1));
+    hd.appendChild(title);
+    if (s.model) {
+      const badge = document.createElement("span");
+      badge.className = "badge";
+      badge.textContent = s.model;
+      hd.appendChild(badge);
+    }
+    card.appendChild(hd);
+
+    if (typeof s.durationSec === "number") {
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      meta.textContent = Math.round(s.durationSec) + "s";
+      card.appendChild(meta);
+    }
+
+    if (s.audioUrl) {
+      const audio = document.createElement("audio");
+      audio.controls = true; audio.preload = "none"; audio.src = s.audioUrl;
+      card.appendChild(audio);
+    }
+
+    const btn = document.createElement("button");
+    btn.className = "insert"; btn.textContent = "Add to Live";
+    // "Add to Live" places ONLY the main take, using the chosen placement.
+    // Stem extraction is a separate, explicit action (Extract button below).
+    btn.addEventListener("click", () => close({ trackId: s.trackId, placement }));
+    card.appendChild(btn);
+
+    list.appendChild(card);
+  });
+
+  // "Extract selected → Live" — derive the checked stems for the selected take,
+  // each onto its own new track. Enabled only when at least one box is ticked.
+  const extractBtn = document.getElementById("extract");
+  const stemBoxes = ["stemVocal", "stemInstrumental", "stemWav"].map((id) => document.getElementById(id));
+  function syncExtract() {
+    if (extractBtn) extractBtn.disabled = !stemBoxes.some((b) => b && b.checked);
+  }
+  stemBoxes.forEach((b) => b && b.addEventListener("change", syncExtract));
+  syncExtract();
+  if (extractBtn) {
+    extractBtn.addEventListener("click", () => {
+      if (!selectedTakeId) return;
+      close({
+        trackId: selectedTakeId,
+        extractOnly: true,
+        stems: {
+          vocal: document.getElementById("stemVocal").checked,
+          instrumental: document.getElementById("stemInstrumental").checked,
+          wav: document.getElementById("stemWav").checked,
+        },
+      });
+    });
+  }
+
+  document.getElementById("regen").addEventListener("click", () => close({ retry: true }));
+  document.getElementById("back").addEventListener("click", () => close({ back: true }));
+  document.getElementById("cancel").addEventListener("click", () => close({ cancelled: true }));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") close({ cancelled: true }); });
+</script>
+</body>
+</html>

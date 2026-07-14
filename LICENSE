@@ -1,0 +1,42 @@
+MIT License
+
+Copyright (c) 2026 Fueled By Imagination
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+Supplemental notices (not part of the MIT License above):
+
+1. SERVICE TERMS. This license covers the extension client source code and
+   binaries only. The FXI Studio backend service — including music generation,
+   library, stem separation, and vocal processing — is a proprietary hosted
+   service. Use of that service through this client is governed by the FXI
+   Studio Terms of Service (https://www.fxi.studio/terms), and requires an
+   FXI Studio account. Nothing in the MIT License grants any right to the
+   service, its APIs beyond published client use, or its models.
+
+2. TRADEMARKS. "FXI", "FXI Studio", "SoundStage", and the FXI logo are
+   trademarks of Fueled By Imagination. The MIT License does not grant
+   trademark rights; forks must not present themselves as official FXI
+   software.
+
+3. THIRD-PARTY SDK. This project builds against the Ableton Extensions SDK,
+   which is distributed by Ableton under its own license terms and is NOT
+   included in or covered by this repository's license.

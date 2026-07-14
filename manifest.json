@@ -1,0 +1,7 @@
+{
+    "name": "fxi-soundstage",
+    "author": "Fueled By Imagination",
+    "entry": "dist/extension.js",
+    "version": "1.6.0",
+    "minimumApiVersion": "1.0.0"
+}
