@@ -2,7 +2,9 @@
 
 **Your AI music crew, inside the session.** SoundStage brings the FXI Studio generation stack directly into Ableton Live — write a brief, roll tape, and drop finished takes, stems, and vocals straight onto your tracks. No exporting, no browser tab juggling. The studio comes to you.
 
-<!-- SCREENSHOT: hero — Generate dialog open over an Ableton Live session -->
+![Generate dialog open over a session](docs/images/soundstage-generate-dialog.png)
+
+> Visuals are simulated previews of the extension flow — Live 12.4.5 beta chrome is still changing, so we render the walkthrough instead of screenshotting a moving target.
 
 ---
 
@@ -21,9 +23,11 @@ SoundStage is a native Ableton Live extension (`.ablx`) that connects your Live 
 - **Enhance vocals** — vocal enhancement flows, including the Vocal-Max rack treatment.
 - **Match mix** — analyze a reference and match your track's mix profile against it.
 
-<!-- SCREENSHOT: context menu — "Generate music with FXI…" on an audio track -->
-<!-- SCREENSHOT: take picker with stems -->
-<!-- SCREENSHOT: Library browser panel -->
+![Right-click any audio track — Generate music with FXI](docs/images/soundstage-context-menu.png)
+
+![Take picker — audition variants, keep the one that works](docs/images/soundstage-take-picker.png)
+
+![Stems split onto labelled Live tracks](docs/images/soundstage-stems.png)
 
 ## Requirements
 
