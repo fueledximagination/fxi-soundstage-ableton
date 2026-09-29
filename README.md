@@ -4,6 +4,8 @@
 
 ![Generate dialog open over a session](docs/images/soundstage-generate-dialog.png)
 
+> **New here?** The full walkthrough, from install to your first generated take, lives on FXI Studio: **[SoundStage for Ableton Live: step-by-step guide →](https://www.fxi.studio/tutorials/soundstage-ableton?utm_source=github&utm_medium=oss&utm_campaign=soundstage-ableton&utm_content=readme-top)**
+
 > Visuals are simulated previews of the extension flow — Live 12.4.5 beta chrome is still changing, so we render the walkthrough instead of screenshotting a moving target.
 
 ---
@@ -72,6 +74,8 @@ The [Ableton Extensions SDK](https://ableton.github.io/extensions-sdk/) beta tar
 
 - Bugs and feature requests: [GitHub Issues](https://github.com/fueledximagination/fxi-soundstage-ableton/issues)
 - Find us and other community extensions in the Ableton Discord `#extensions-gallery`
+- Step-by-step guide: [SoundStage for Ableton Live on FXI Studio](https://www.fxi.studio/tutorials/soundstage-ableton?utm_source=github&utm_medium=oss&utm_campaign=soundstage-ableton&utm_content=readme-support)
+- Product docs: [SoundStage documentation](https://www.fxi.studio/documentation/soundstage?utm_source=github&utm_medium=oss&utm_campaign=soundstage-ableton&utm_content=readme-support)
 - Account and billing: [fxi.studio](https://www.fxi.studio)
 
 ## License
